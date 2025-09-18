@@ -1,0 +1,5 @@
+name: hellotools
+version: 0.1.0
+author: Example Author
+description: Example package with commands.
+commands: hello, bye
