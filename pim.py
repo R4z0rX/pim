@@ -11,7 +11,7 @@ Defaults:
     - Target: DEFAULT_TARGET (configurable below)
 This script uses only Python standard libraries.
 """
-
+# pylint: disable=W0718
 import argparse
 import os
 import sys
@@ -21,22 +21,31 @@ import tempfile
 import zipfile
 import shutil
 import time
+import json
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
+
+current_directory_path = os.getcwd()
+directory_name = os.path.basename(current_directory_path)
+is_in_mc = directory_name != "minescript"
+if is_in_mc:
+    base_path = "./minescript/"
+else:
+    base_path = "./"
+config_path = os.path.join(base_path, "config.txt")
 
 # ---------------------------
 # CONFIG
 # ---------------------------
 DEFAULT_REPOS = [
-    "http://localhost:8000/packages/",  # Dev repo
-    "https://raw.githubusercontent.com/R4z0rX/pim/packages/",    # Main repo
-    "https://raw.githubusercontent.com/R4z0rX/pim/example_packages/",    # Example repo
+    #"http://localhost:8000/packages/",  # Dev repo
+    "https://raw.githubusercontent.com/R4z0rX/pim/refs/heads/main/example_packages/",    # Example repo
+    "https://raw.githubusercontent.com/R4z0rX/pim/refs/heads/main/packages/",    # Main repo
 ]
-#MINESCRIPT_PATH = "./"  # Use this if pim.py is in the minescript folder (/minescript/pim.py)
-MINESCRIPT_PATH = "../" # Use this if pim.py is in a minescript sub-folder (/minescript/my_sub_folder/pim.py)
 PKG_PATH = "pkg"
-DEFAULT_TARGET = MINESCRIPT_PATH + PKG_PATH
+DEFAULT_TARGET = base_path + PKG_PATH
 MAKE_BKP = True
+FETCH_TIMEOUT = 10 # seconds
 # ---------------------------
 
 
@@ -70,10 +79,10 @@ def find_package_in_repos(pkg_name: str, repos: list):
         zip_url = url_join(base, zip_name)
         info_url = url_join(base, info_name)
         try:
-            with urllib.request.urlopen(info_url) as resp:
+            with urllib.request.urlopen(info_url, timeout=FETCH_TIMEOUT) as resp:
                 if resp.status == 200:
                     try:
-                        with urllib.request.urlopen(zip_url) as zresp:
+                        with urllib.request.urlopen(zip_url, timeout=FETCH_TIMEOUT) as zresp:
                             if zresp.status == 200:
                                 return base, zip_url, info_url
                     except urllib.error.HTTPError:
@@ -88,7 +97,7 @@ def find_package_in_repos(pkg_name: str, repos: list):
 def download_to_temp(url: str, desc: str = None):
     tmpfd, tmpname = tempfile.mkstemp()
     os.close(tmpfd)
-    def hook(blocknum, blocksize, totalsize):
+    def hook(blocknum: int, blocksize: int, totalsize: int):
         if totalsize <= 0:
             return
         downloaded = min(blocknum * blocksize, totalsize)
@@ -148,19 +157,19 @@ def make_backup(path: str) -> str | None:
         return None
 
 
-def add_command_path_to_config(target_dir: str, pkg_name: str, subdir: str = "commands") -> tuple[bool, str]:
+def add_command_path_to_config(pkg_name: str, subdir: str = "commands") -> tuple[bool, str]:
     """
     Safely add a relative path `<pkg_name>/<subdir>` to the `command_path` entry in
     config.txt. Makes a backup before modifying. Returns (changed, message).
     """
-    config_path = os.path.join(MINESCRIPT_PATH, "config.txt")
+    bak = None
     rel_path = f"{PKG_PATH}\\{pkg_name}\\{subdir}"
 
     # Create config.txt with a default command_path if missing
     if not os.path.exists(config_path):
         try:
             with open(config_path, "w", encoding="utf-8") as f:
-                f.write(f"command_path={rel_path}\n")
+                f.write(f'command_path="{rel_path}"\n')
             return True, f"config.txt created with command_path={rel_path}"
         except Exception as e:
             return False, f"Failed to create config.txt: {e}"
@@ -207,6 +216,10 @@ def add_command_path_to_config(target_dir: str, pkg_name: str, subdir: str = "co
                 new_lines.append(ln)
         else:
             new_lines.append(ln)
+    
+    if not had_command_path:
+        new_lines.append(f'command_path="{rel_path}"\n')
+        added = True
 
     if added:
         try:
@@ -328,7 +341,7 @@ def install_package(pkg_name: str, repos: list, target: str, force: bool = False
                     do_add = prompt_yes_no(prompt, default=True)
 
                 if do_add:
-                    changed, message = add_command_path_to_config(target, pkg_name, subdir='commands')
+                    changed, message = add_command_path_to_config(pkg_name, subdir='commands')
                     if changed:
                         print(f"config.txt updated: {message}")
                     else:
@@ -355,7 +368,7 @@ def show_package(pkg_name: str, repos: list, target: str):
         print(f"'{pkg_name}' not found in repos nor is it installed locally.")
         return 1
     try:
-        with urllib.request.urlopen(info_url) as resp:
+        with urllib.request.urlopen(info_url, timeout=FETCH_TIMEOUT) as resp:
             info_text = resp.read().decode("utf-8")
         info = parse_info_text(info_text)
         print(f"Information (from repo) for {pkg_name}:")
@@ -374,9 +387,9 @@ def list_installed(target: str):
     inside the package directory. This avoids listing unrelated folders.
     """
     if not os.path.exists(target):
-        print(f"Target folder does not exist: {target}")
-        return 1
-
+        print("No packages installed.")
+        return 0
+        
     candidates = sorted(
         name for name in os.listdir(target)
         if os.path.isdir(os.path.join(target, name))
@@ -403,27 +416,13 @@ def list_installed(target: str):
             version = None
         print(f" - {name}" + (f" ({version})" if version else ""))
     return 0
-    print("Installed packages:")
-    for name in entries:
-        info_path = os.path.join(target, name, f"{name}.info")
-        version = None
-        if os.path.exists(info_path):
-            try:
-                with open(info_path, "r", encoding="utf-8") as f:
-                    info = parse_info_text(f.read())
-                version = info.get("version")
-            except Exception:
-                version = None
-        print(f" - {name}" + (f" ({version})" if version else ""))
-    return 0
 
-
-def remove_command_path_from_config(target_dir: str, pkg_name: str, subdir: str = "commands") -> tuple[bool, str]:
+def remove_command_path_from_config(pkg_name: str, subdir: str = "commands") -> tuple[bool, str]:
     """
     Remove the relative path '<pkg_name>/<subdir>' from the command_path entry in
     config.txt. Makes a backup before modifying. Returns (changed, message).
     """
-    config_path = os.path.join(MINESCRIPT_PATH, "config.txt")
+    bak = None
     rel_path = f"{PKG_PATH}\\{pkg_name}\\{subdir}"
 
     if not os.path.exists(config_path):
@@ -511,7 +510,7 @@ def uninstall_package(pkg_name: str, target: str):
 
     # If the package had a commands/ folder, attempt to remove its command_path entry
     if has_commands:
-        changed, message = remove_command_path_from_config(target, pkg_name, subdir="commands")
+        changed, message = remove_command_path_from_config(pkg_name, subdir="commands")
         if changed:
             print(f"config.txt updated: {message}")
         else:
@@ -521,7 +520,128 @@ def uninstall_package(pkg_name: str, target: str):
     return 0
 
 
-def main(argv):
+def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bool, str]:
+    """
+    Ensure config.txt contains a `command = { ... }` JSON block and that inside it
+    `environment` includes a PYTHONPATH entry with `required_path`. If the `command`
+    block is multiline, this function collects the full JSON object before parsing.
+    Returns (changed, message).
+    """
+    if not os.path.exists(config_path):
+        # create minimal single-line command block
+        obj = {"environment": [f"PYTHONPATH={required_path}"]}
+        with open(config_path, "w", encoding="utf-8") as f:
+            f.write("command = " + json.dumps(obj) + "\n")
+        return True, "config.txt created with command block"
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    changed = False
+    new_lines = []
+    i = 0
+    found_command = False
+
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.lstrip()
+        if stripped.startswith("command=") or stripped.startswith("command ="):
+            found_command = True
+            # find '=' position in original line
+            eq_pos = line.find("=")
+            # locate the first '{' at or after the '=' across lines
+            json_start_line = None
+            json_start_col = None
+            for j in range(i, len(lines)):
+                search_from = 0
+                if j == i:
+                    search_from = eq_pos + 1
+                pos = lines[j].find("{", search_from)
+                if pos != -1:
+                    json_start_line = j
+                    json_start_col = pos
+                    break
+            if json_start_line is None:
+                # no JSON found after '=', treat as empty object
+                obj = {}
+                end_line = i
+            else:
+                # collect from json_start_line/json_start_col until braces balanced
+                depth = 0
+                collected = []
+                finished = False
+                end_line = json_start_line
+                for j in range(json_start_line, len(lines)):
+                    seg = lines[j][json_start_col:] if j == json_start_line else lines[j]
+                    collected.append(seg)
+                    for ch in seg:
+                        if ch == "{":
+                            depth += 1
+                        elif ch == "}":
+                            depth -= 1
+                            if depth == 0:
+                                finished = True
+                                break
+                    if finished:
+                        end_line = j
+                        break
+                if not finished:
+                    return False, "Could not find end of JSON object for 'command' (unbalanced braces)"
+                json_text = "".join(collected)
+                try:
+                    obj = json.loads(json_text)
+                except Exception:
+                    # if parsing fails, fall back to empty object to avoid crashing
+                    obj = {}
+
+            # Ensure environment exists and is a list
+            env = obj.get("environment")
+            if env is None:
+                obj["environment"] = [f"PYTHONPATH={required_path}"]
+                changed = True
+            else:
+                if not isinstance(env, list):
+                    env = [str(env)]
+                idx = None
+                for k, entry in enumerate(env):
+                    if entry.upper().startswith("PYTHONPATH="):
+                        idx = k
+                        break
+                if idx is None:
+                    env.append(f"PYTHONPATH={required_path}")
+                    changed = True
+                else:
+                    key, _, val = env[idx].partition("=")
+                    parts = [p for p in val.split(";") if p]
+                    if required_path not in parts:
+                        parts.append(required_path)
+                        env[idx] = f"{key}={';'.join(parts)}"
+                        changed = True
+                obj["environment"] = env
+
+            # Replace the whole original JSON block with a single-line command = <json>
+            new_lines.append("command = " + json.dumps(obj))
+            # skip original block lines (from i up to end_line)
+            i = end_line + 1
+            continue  # continue the while loop without incrementing i further
+        else:
+            new_lines.append(line.rstrip("\n"))
+            i += 1
+
+    if not found_command:
+        # append a command block if none was present
+        obj = {"environment": [f"PYTHONPATH={required_path}"]}
+        new_lines.append("command = " + json.dumps(obj))
+        changed = True
+
+    if changed:
+        with open(config_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(new_lines) + "\n")
+        return True, "config.txt updated"
+    return False, "PYTHONPATH already present"
+
+
+def main(argv: str):
     parser = argparse.ArgumentParser(prog="pim", description=f"Minescript package installer v{__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
