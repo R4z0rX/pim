@@ -1,6 +1,7 @@
+# pyright: reportUnusedCallResult=false
 import os
 import json
-from . import config_path
+from .msconfig.filepath import CONFIG_PATH
 
 def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bool, str]:
     """
@@ -9,14 +10,14 @@ def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bo
     block is multiline, this function collects the full JSON object before parsing.
     Returns (changed, message).
     """
-    if not os.path.exists(config_path):
+    if not os.path.exists(CONFIG_PATH):
         # create minimal single-line command block
         obj = {"environment": [f"PYTHONPATH={required_path}"]}
-        with open(config_path, "w", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             f.write("command = " + json.dumps(obj) + "\n")
         return True, "config.txt created with command block"
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
     changed = False
@@ -117,7 +118,7 @@ def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bo
         changed = True
 
     if changed:
-        with open(config_path, "w", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             f.write("\n".join(new_lines) + "\n")
         return True, "config.txt updated"
     return False, "PYTHONPATH already present"

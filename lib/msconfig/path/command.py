@@ -1,6 +1,6 @@
 # pyright: reportUnusedCallResult=false
 import os
-from lib import config_path
+from lib.msconfig.filepath import CONFIG_PATH
 from lib.pimconfig import PKG_PATH, MAKE_BKP
 from lib.msconfig.backup import make_backup
 
@@ -13,9 +13,9 @@ def cfg_add_command_path(pkg_name: str, subdir: str = "commands") -> tuple[bool,
     rel_path = f"{PKG_PATH}\\{pkg_name}\\{subdir}"
 
     # Create config.txt with a default command_path if missing
-    if not os.path.exists(config_path):
+    if not os.path.exists(CONFIG_PATH):
         try:
-            with open(config_path, "w", encoding="utf-8") as f:
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 f.write(f'command_path="{rel_path}"\n')
             return True, f"config.txt created with command_path={rel_path}"
         except Exception as e:
@@ -23,10 +23,10 @@ def cfg_add_command_path(pkg_name: str, subdir: str = "commands") -> tuple[bool,
 
     # Make a backup
     if MAKE_BKP:
-        bak = make_backup(config_path)
+        bak = make_backup(CONFIG_PATH)
 
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             data = f.read()
     except Exception as e:
         return False, f"Failed to read config.txt: {e}"
@@ -70,7 +70,7 @@ def cfg_add_command_path(pkg_name: str, subdir: str = "commands") -> tuple[bool,
 
     if added:
         try:
-            with open(config_path, "w", encoding="utf-8") as f:
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 f.write("\n".join(new_lines) + "\n")
             msg = f"Added '{rel_path}' to command_path (backup: {bak})" if bak else f"Added '{rel_path}' to command_path"
             return True, msg
@@ -88,14 +88,14 @@ def cfg_remove_command_path(pkg_name: str, subdir: str = "commands") -> tuple[bo
     bak = None
     rel_path = f"{PKG_PATH}\\{pkg_name}\\{subdir}"
 
-    if not os.path.exists(config_path):
+    if not os.path.exists(CONFIG_PATH):
         return False, "config.txt not found"
 
     if MAKE_BKP:
-        bak = make_backup(config_path)
+        bak = make_backup(CONFIG_PATH)
 
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             data = f.read()
     except Exception as e:
         return False, f"Failed to read config.txt: {e}"
@@ -144,7 +144,7 @@ def cfg_remove_command_path(pkg_name: str, subdir: str = "commands") -> tuple[bo
 
     if changed:
         try:
-            with open(config_path, "w", encoding="utf-8") as f:
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 f.write("\n".join(new_lines) + "\n")
             msg = f"Removed '{rel_path}' from command_path (backup: {bak})" if bak else f"Removed '{rel_path}' from command_path"
             return True, msg

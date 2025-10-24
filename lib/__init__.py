@@ -14,16 +14,4 @@ This script uses only Python standard libraries.
 # pylint: disable=W0718
 # pyright: reportUnusedCallResult=false
 
-import os
-
 __version__ = "1.0.4"
-
-
-current_directory_path = os.getcwd()
-directory_name = os.path.basename(current_directory_path)
-is_in_mc = directory_name != "minescript"
-if is_in_mc:
-    base_path = "./minescript/"
-else:
-    base_path = "./"
-config_path = os.path.join(base_path, "config.txt")

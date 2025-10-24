@@ -1,4 +1,4 @@
-from . import base_path
+from .msconfig.filepath import BASE_PATH
 
 DEFAULT_REPOS = [
     #"http://localhost:8000/packages/",  # Dev repo
@@ -7,6 +7,6 @@ DEFAULT_REPOS = [
 ]
 
 PKG_PATH = "pkg"
-DEFAULT_TARGET = base_path + PKG_PATH
+DEFAULT_TARGET = BASE_PATH + PKG_PATH
 MAKE_BKP = True
 FETCH_TIMEOUT = 10 # seconds
