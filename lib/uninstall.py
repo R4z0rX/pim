@@ -1,6 +1,6 @@
 import os
 import shutil
-from . import remove_command_path_from_config
+from .config.path.command import cfg_remove_command_path
 
 def uninstall_package(pkg_name: str, target: str):
     path = os.path.join(target, pkg_name)
@@ -21,7 +21,7 @@ def uninstall_package(pkg_name: str, target: str):
 
     # If the package had a commands/ folder, attempt to remove its command_path entry
     if has_commands:
-        changed, message = remove_command_path_from_config(pkg_name, subdir="commands")
+        changed, message = cfg_remove_command_path(pkg_name, subdir="commands")
         if changed:
             print(f"config.txt updated: {message}")
         else:

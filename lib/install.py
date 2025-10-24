@@ -2,7 +2,9 @@ import os
 import tempfile
 import shutil
 import zipfile
-from . import download_to_temp, find_package_in_repos, parse_info_text, prompt_yes_no, add_command_path_to_config
+from . import download_to_temp, find_package_in_repos, parse_info_text
+from .config.path.command import cfg_add_command_path
+from .util.prompt import prompt_yes_no
 
 def install_package(
     pkg_name: str,
@@ -122,7 +124,7 @@ def install_package(
                     do_add = prompt_yes_no(prompt, default=True)
 
                 if do_add:
-                    changed, message = add_command_path_to_config(pkg_name, subdir='commands')
+                    changed, message = cfg_add_command_path(pkg_name, subdir='commands')
                     if changed:
                         print(f"config.txt updated: {message}")
                     else:
