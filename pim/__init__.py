@@ -12,11 +12,13 @@ Defaults:
 This script uses only Python standard libraries.
 """
 # pylint: disable=W0718
+# pyright: reportUnusedCallResult=false
 import argparse
 import os
 import sys
 import urllib.request
 import urllib.error
+from http.client import HTTPResponse
 import tempfile
 import zipfile
 import shutil
@@ -49,8 +51,8 @@ FETCH_TIMEOUT = 10 # seconds
 # ---------------------------
 
 
-def parse_info_text(text: str) -> dict:
-    info = {}
+def parse_info_text(text: str) -> dict[str, str]:
+    info: dict[str, str] = {}
     for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
@@ -72,18 +74,19 @@ def url_join(base: str, name: str) -> str:
     return base + name
 
 
-def find_package_in_repos(pkg_name: str, repos: list):
+def find_package_in_repos(pkg_name: str, repos: list[str]) -> tuple[str,str,str] | None:
     zip_name = f"{pkg_name}.zip"
     info_name = f"{pkg_name}.info"
     for base in repos:
         zip_url = url_join(base, zip_name)
         info_url = url_join(base, info_name)
         try:
-            with urllib.request.urlopen(info_url, timeout=FETCH_TIMEOUT) as resp:
+            with urllib.request.urlopen(info_url, timeout=FETCH_TIMEOUT) as resp: # pyright: ignore[reportAny]
+                if not isinstance(resp, HTTPResponse): return None
                 if resp.status == 200:
                     try:
-                        with urllib.request.urlopen(zip_url, timeout=FETCH_TIMEOUT) as zresp:
-                            if zresp.status == 200:
+                        with urllib.request.urlopen(zip_url, timeout=FETCH_TIMEOUT) as zresp: # pyright: ignore[reportAny]
+                            if zresp.status == 200: # pyright: ignore[reportAny]
                                 return base, zip_url, info_url
                     except urllib.error.HTTPError:
                         continue
@@ -91,22 +94,23 @@ def find_package_in_repos(pkg_name: str, repos: list):
             continue
         except urllib.error.URLError:
             continue
-    return None, None, None
+    return None
 
 
-def download_to_temp(url: str, desc: str = None):
+def download_to_temp(url: str, desc: str|None = None):
     tmpfd, tmpname = tempfile.mkstemp()
     os.close(tmpfd)
+
     def hook(blocknum: int, blocksize: int, totalsize: int):
         if totalsize <= 0:
             return
         downloaded = min(blocknum * blocksize, totalsize)
         pct = downloaded / totalsize * 100
-        sys.stdout.write(f"\rDownloading {desc or url}: {pct:5.1f}%")
-        sys.stdout.flush()
+        print(f"\rDownloading {desc or url}: {pct:5.1f}%", end="", flush=True)
+
     try:
         urllib.request.urlretrieve(url, tmpname, reporthook=hook)
-        sys.stdout.write("\n")
+        print(flush=True)
         return tmpname
     except Exception as e:  # pylint: disable=W0612 # type: ignore
         if os.path.exists(tmpname):
@@ -187,7 +191,7 @@ def add_command_path_to_config(pkg_name: str, subdir: str = "commands") -> tuple
     sep = ";" if os.name == "nt" else ":"
 
     lines = data.splitlines()
-    new_lines = []
+    new_lines: list[str] = []
     added = False
     had_command_path = False
 
@@ -233,14 +237,24 @@ def add_command_path_to_config(pkg_name: str, subdir: str = "commands") -> tuple
         return False, "The path was already present in command_path"
 
 
-def install_package(pkg_name: str, repos: list, target: str, force: bool = False, nocfg: bool = False, auto_add_cmd_path: bool = False):
-    base, zip_url, info_url = find_package_in_repos(pkg_name, repos)
-    if not base:
+def install_package(
+    pkg_name: str,
+    repos: list[str],
+    target: str,
+    force: bool = False,
+    nocfg: bool = False,
+    auto_add_cmd_path: bool = False
+):
+    pkg = find_package_in_repos(pkg_name, repos)
+    if not pkg: 
         print(f"Package '{pkg_name}' not found in the configured repos.")
         return 1
 
+    base, zip_url, info_url = pkg
     print(f"Package found in: {base}")
+
     # download info
+    # TODO: fix this
     try:
         info_temp = download_to_temp(info_url, desc=f"{pkg_name}.info")
         with open(info_temp, "r", encoding="utf-8") as f:
@@ -309,7 +323,7 @@ def install_package(pkg_name: str, repos: list, target: str, force: bool = False
 
     # Save info inside the installed package
     try:
-        info_lines = []
+        info_lines: list[str] = []
         for k, v in info.items():
             if k == "description" and "\n" in v:
                 info_lines.append(f"description: {v}")
@@ -353,7 +367,7 @@ def install_package(pkg_name: str, repos: list, target: str, force: bool = False
     return 0
 
 
-def show_package(pkg_name: str, repos: list, target: str):
+def show_package(pkg_name: str, repos: list[str], target: str):
     local_info_path = os.path.join(target, pkg_name, f"{pkg_name}.info")
     if os.path.exists(local_info_path):
         with open(local_info_path, "r", encoding="utf-8") as f:
@@ -363,12 +377,15 @@ def show_package(pkg_name: str, repos: list, target: str):
             print(f"{k}: {v}")
         return 0
 
-    base, zip_url, info_url = find_package_in_repos(pkg_name, repos)  # pylint: disable=W0612 # type: ignore
-    if not base:
+    pkg = find_package_in_repos(pkg_name, repos)  # pylint: disable=W0612 # type: ignore
+    if not pkg:
         print(f"'{pkg_name}' not found in repos nor is it installed locally.")
         return 1
+    _, _, info_url = pkg
+
     try:
-        with urllib.request.urlopen(info_url, timeout=FETCH_TIMEOUT) as resp:
+        with urllib.request.urlopen(info_url, timeout=FETCH_TIMEOUT) as resp: # pyright: ignore[reportAny]
+            if not isinstance(resp, HTTPResponse): return None
             info_text = resp.read().decode("utf-8")
         info = parse_info_text(info_text)
         print(f"Information (from repo) for {pkg_name}:")
@@ -395,7 +412,7 @@ def list_installed(target: str):
         if os.path.isdir(os.path.join(target, name))
     )
 
-    packages = []
+    packages: list[tuple[str, str]] = []
     for name in candidates:
         info_path = os.path.join(target, name, f"{name}.info")
         if os.path.isfile(info_path):
@@ -440,7 +457,7 @@ def remove_command_path_from_config(pkg_name: str, subdir: str = "commands") -> 
     sep = ";" if os.name == "nt" else ":"
 
     lines = data.splitlines()
-    new_lines = []
+    new_lines: list[str] = []
     changed = False
     had_command_path = False
 
@@ -538,7 +555,7 @@ def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bo
         lines = f.readlines()
 
     changed = False
-    new_lines = []
+    new_lines: list[str] = []
     i = 0
     found_command = False
 
@@ -568,7 +585,7 @@ def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bo
             else:
                 # collect from json_start_line/json_start_col until braces balanced
                 depth = 0
-                collected = []
+                collected: list[str] = []
                 finished = False
                 end_line = json_start_line
                 for j in range(json_start_line, len(lines)):
@@ -589,7 +606,7 @@ def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bo
                     return False, "Could not find end of JSON object for 'command' (unbalanced braces)"
                 json_text = "".join(collected)
                 try:
-                    obj = json.loads(json_text)
+                    obj = json.loads(json_text) # pyright: ignore[reportAny]
                 except Exception:
                     # if parsing fails, fall back to empty object to avoid crashing
                     obj = {}
@@ -641,7 +658,7 @@ def ensure_pythonpath_config(required_path: str = r"minescript\pkg") -> tuple[bo
     return False, "PYTHONPATH already present"
 
 
-def main(argv: str):
+def main(argv: list[str]):
     parser = argparse.ArgumentParser(prog="pim", description=f"Minescript package installer v{__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
