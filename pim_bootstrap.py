@@ -69,7 +69,9 @@ def latest_version() -> Version | None:
         except: return None
         ver = latest[1:]
         return Version.parse(ver)
-    except: return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
 
 def download_version(ver: Version) -> Version | None:
@@ -114,3 +116,5 @@ if __name__ == "__main__":
         result = download_version(lver)
         if result is None: print("Update failed")
         else: print(f"Updated to {result}")
+    else:
+        print("No update necessary!")
