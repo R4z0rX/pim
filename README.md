@@ -50,6 +50,7 @@ It is inspired by [`pip`](https://pypi.org/project/pip/), but designed specifica
         ```
         python pim_bootstrapper.py
         ```
+4. In future, pim can be updated by simply running the bootstrapper again - no new file downloads necessary!
 
 ---
 
