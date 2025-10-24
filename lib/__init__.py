@@ -167,7 +167,7 @@ def add_command_path_to_config(pkg_name: str, subdir: str = "commands") -> tuple
     config.txt. Makes a backup before modifying. Returns (changed, message).
     """
     bak = None
-    rel_path = f"{PKG_PATH}/{pkg_name}/{subdir}"
+    rel_path = f"{PKG_PATH}\\{pkg_name}\\{subdir}"
 
     # Create config.txt with a default command_path if missing
     if not os.path.exists(config_path):
@@ -242,7 +242,7 @@ def remove_command_path_from_config(pkg_name: str, subdir: str = "commands") -> 
     config.txt. Makes a backup before modifying. Returns (changed, message).
     """
     bak = None
-    rel_path = f"{PKG_PATH}/{pkg_name}/{subdir}"
+    rel_path = f"{PKG_PATH}\\{pkg_name}\\{subdir}"
 
     if not os.path.exists(config_path):
         return False, "config.txt not found"
