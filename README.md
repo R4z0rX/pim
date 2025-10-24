@@ -31,7 +31,7 @@ It is inspired by [`pip`](https://pypi.org/project/pip/), but designed specifica
 
 ## 📥 Installation
 
-1. Download the file [`pim.py`](./pim.py).  
+1. Download the **pim** bootstrapper [here](https://raw.githubusercontent.com/R4z0rX/pim/bootstrapper/pim_bootstrapper.py)
 2. Place it inside your Minescript root folder (the same folder where `config.txt` is).  
    - On Windows this is usually:  
      ```
@@ -41,6 +41,15 @@ It is inspired by [`pip`](https://pypi.org/project/pip/), but designed specifica
      ```
      ~/.minecraft/minescript/
      ```
+3. Run the bootstrapper to install the latest version of **pim**. You can do this in two ways:
+    - Within minecraft:
+        ```
+        \pim_bootstrapper
+        ```
+    - From the commandline
+        ```
+        python pim_bootstrapper.py
+        ```
 
 ---
 
