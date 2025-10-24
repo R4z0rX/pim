@@ -53,8 +53,8 @@ class Version:
 
 def installed_version() -> Version | None:
     try:
-        import pim # pyright: ignore[reportMissingImports]
-        return Version.parse(pim.__version__) # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
+        import pim.lib # pyright: ignore[reportMissingImports]
+        return Version.parse(pim.lib.__version__) # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
     except ModuleNotFoundError: return None
 
 def latest_version() -> Version | None:
