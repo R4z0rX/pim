@@ -14,4 +14,4 @@ This script uses only Python standard libraries.
 # pylint: disable=W0718
 # pyright: reportUnusedCallResult=false
 
-__version__ = "1.0.4"
+__version__ = "1.1.0"
