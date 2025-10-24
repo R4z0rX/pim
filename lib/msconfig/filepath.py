@@ -10,7 +10,7 @@ match dirname:
     case _:
         print("You are running pim outside of a minecraft installation!")
         print("This may lead to unintended behaviour.")
-        if not prompt_yes_no("Continue?", default=False): exit(0)
+        if not prompt_yes_no("Continue? [y/N]", default=False): exit(0)
         _base = "./minescript/"
 CONFIG_PATH = os.path.join(_base, "config.txt")
 BASE_PATH = _base
