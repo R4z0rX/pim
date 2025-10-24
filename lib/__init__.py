@@ -13,22 +13,11 @@ This script uses only Python standard libraries.
 """
 # pylint: disable=W0718
 # pyright: reportUnusedCallResult=false
-import argparse
-import os
-import sys
-import urllib.request
-import urllib.error
-from http.client import HTTPResponse
-import tempfile
-import zipfile
-import shutil
-import time
-import json
 
-from .config.backup import make_backup
-from .util.url import url_join
+import os
 
 __version__ = "1.0.4"
+
 
 current_directory_path = os.getcwd()
 directory_name = os.path.basename(current_directory_path)
