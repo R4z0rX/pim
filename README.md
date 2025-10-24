@@ -31,7 +31,7 @@ It is inspired by [`pip`](https://pypi.org/project/pip/), but designed specifica
 
 ## 📥 Installation
 
-1. Download the file [`pim.py`](./pim.py).  
+1. Download the **pim** bootstrapper [here](https://raw.githubusercontent.com/R4z0rX/pim/bootstrapper/pim_bootstrapper.py)
 2. Place it inside your Minescript root folder (the same folder where `config.txt` is).  
    - On Windows this is usually:  
      ```
@@ -41,6 +41,16 @@ It is inspired by [`pip`](https://pypi.org/project/pip/), but designed specifica
      ```
      ~/.minecraft/minescript/
      ```
+3. Run the bootstrapper to install the latest version of **pim**. You can do this in two ways:
+    - Within minecraft:
+        ```
+        \pim_bootstrapper
+        ```
+    - From the commandline
+        ```
+        python pim_bootstrapper.py
+        ```
+4. In future, pim can be updated by simply running the bootstrapper again - no new file downloads necessary!
 
 ---
 
@@ -167,6 +177,13 @@ If accepted, Minescript will be able to run the commands directly: \
 - **pim** uses only Python standard libraries (`argparse`, `urllib`, `zipfile`, etc.).
 - Always make sure your packages have a unique name to avoid conflicts.
 - On Tools / Commands packages installations, pim creates a timestamped backup of `config.txt` before making changes.
+
+---
+
+## 💻 Contributors
+
+- RazrCraft ([@R4z0rX](https://github.com/R4z0rX))
+- Marlstar ([@Marlstar](https://github.com/Marlstar))
 
 ---
 
