@@ -25,6 +25,8 @@ import shutil
 import time
 import json
 
+from .config.backup import make_backup
+
 __version__ = "1.0.4"
 
 current_directory_path = os.getcwd()
@@ -150,15 +152,6 @@ def prompt_yes_no(prompt: str, default: bool = False) -> bool:
     return ans in {"y", "yes"}
 
 
-def make_backup(path: str) -> str | None:
-    """Create a timestamped backup copy of `path`. Returns backup path or None on failure."""
-    try:
-        ts = time.strftime("%Y%m%d_%H%M%S")
-        bak = f"{path}.bak.{ts}"
-        shutil.copy2(path, bak)
-        return bak
-    except Exception:
-        return None
 
 
 def add_command_path_to_config(pkg_name: str, subdir: str = "commands") -> tuple[bool, str]:
