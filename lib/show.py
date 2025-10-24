@@ -1,7 +1,8 @@
 import os
 import urllib.request
 from http.client import HTTPResponse
-from . import find_package_in_repos, parse_info_text
+from .find import find_pkg_in_repos
+from .parse import parse_info_text
 from . import FETCH_TIMEOUT
 
 def show_package(pkg_name: str, repos: list[str], target: str):
@@ -14,7 +15,7 @@ def show_package(pkg_name: str, repos: list[str], target: str):
             print(f"{k}: {v}")
         return 0
 
-    pkg = find_package_in_repos(pkg_name, repos)  # pylint: disable=W0612 # type: ignore
+    pkg = find_pkg_in_repos(pkg_name, repos)  # pylint: disable=W0612 # type: ignore
     if not pkg:
         print(f"'{pkg_name}' not found in repos nor is it installed locally.")
         return 1

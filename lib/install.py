@@ -1,8 +1,11 @@
+# pyright: reportUnusedCallResult=false
+
 import os
 import tempfile
 import shutil
 import zipfile
-from . import download_to_temp, find_package_in_repos
+from . import download_to_temp
+from .find import find_pkg_in_repos
 from .parse import parse_info_text
 from .config.path.command import cfg_add_command_path
 from .util.prompt import prompt_yes_no
@@ -15,7 +18,7 @@ def install_package(
     nocfg: bool = False,
     auto_add_cmd_path: bool = False
 ):
-    pkg = find_package_in_repos(pkg_name, repos)
+    pkg = find_pkg_in_repos(pkg_name, repos)
     if not pkg: 
         print(f"Package '{pkg_name}' not found in the configured repos.")
         return 1

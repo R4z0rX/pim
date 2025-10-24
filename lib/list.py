@@ -1,5 +1,5 @@
 import os
-from . import parse_info_text
+from .parse import parse_info_text
 
 def list_installed(target: str):
     """
