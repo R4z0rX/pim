@@ -3,7 +3,7 @@ import urllib.request
 from http.client import HTTPResponse
 from .find import find_pkg_in_repos
 from .parse import parse_info_text
-from . import FETCH_TIMEOUT
+from .pimconfig import FETCH_TIMEOUT
 
 def show_package(pkg_name: str, repos: list[str], target: str):
     local_info_path = os.path.join(target, pkg_name, f"{pkg_name}.info")

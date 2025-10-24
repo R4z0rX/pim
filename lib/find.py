@@ -2,7 +2,7 @@ import urllib.request
 import urllib.error
 from http.client import HTTPResponse
 from .util.url import url_join
-from . import FETCH_TIMEOUT
+from .pimconfig import FETCH_TIMEOUT
 
 def find_pkg_in_repos(pkg_name: str, repos: list[str]) -> tuple[str,str,str] | None:
     zip_name = f"{pkg_name}.zip"

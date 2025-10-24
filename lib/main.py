@@ -1,5 +1,6 @@
 import argparse
-from . import __version__, DEFAULT_REPOS, DEFAULT_TARGET
+from . import __version__
+from .pimconfig import DEFAULT_REPOS, DEFAULT_TARGET
 from .install import install_package
 from .uninstall import uninstall_package
 from .list import list_installed
