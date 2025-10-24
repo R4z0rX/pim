@@ -1,8 +1,9 @@
 import argparse
 from . import __version__, DEFAULT_REPOS, DEFAULT_TARGET
-from . import install_package, show_package
+from . import install_package
 from .uninstall import uninstall_package
 from .list import list_installed
+from .show import show_package
 
 def main(argv: list[str]):
     parser = argparse.ArgumentParser(prog="pim", description=f"Minescript package installer v{__version__}")
