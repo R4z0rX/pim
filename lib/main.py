@@ -1,6 +1,7 @@
 import argparse
 from . import __version__, DEFAULT_REPOS, DEFAULT_TARGET
-from . import install_package, uninstall_package, show_package, list_installed
+from . import install_package, show_package
+from .uninstall import uninstall_package
 from .list import list_installed
 
 def main(argv: list[str]):
