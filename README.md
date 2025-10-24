@@ -182,8 +182,8 @@ If accepted, Minescript will be able to run the commands directly: \
 
 ## 💻 Contributors
 
-- RazrCraft [(@R4z0rX)](https://github.com/R4z0rX)
-- Marlstar [(@Marlstar)](https://github.com/Marlstar)
+- RazrCraft ([@R4z0rX](https://github.com/R4z0rX))
+- Marlstar ([@Marlstar](https://github.com/Marlstar))
 
 ---
 
