@@ -2,7 +2,8 @@ import os
 import tempfile
 import shutil
 import zipfile
-from . import download_to_temp, find_package_in_repos, parse_info_text
+from . import download_to_temp, find_package_in_repos
+from .parse import parse_info_text
 from .config.path.command import cfg_add_command_path
 from .util.prompt import prompt_yes_no
 
