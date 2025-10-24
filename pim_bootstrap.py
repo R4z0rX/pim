@@ -53,19 +53,19 @@ class Version:
 
 def installed_version() -> Version | None:
     try:
-        import pim
-        return Version.parse(pim.__version__)
+        import pim # pyright: ignore[reportMissingImports]
+        return Version.parse(pim.__version__) # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
     except ModuleNotFoundError: return None
 
 def latest_version() -> Version | None:
     req = Request(TAGS_API, headers={"User-Agent": "pim-bootstrapper"})
     try:
-        resp: HTTPResponse = urlopen(req, timeout=TIMEOUT)
+        resp: HTTPResponse = urlopen(req, timeout=TIMEOUT) # pyright: ignore[reportAny]
         if resp.status != 200: return None
         bytes = resp.read()
         encoding = resp.headers.get_content_charset() or "utf-8"
         body = bytes.decode(encoding)
-        try: latest: str = json.loads(body)[0]["name"]
+        try: latest: str = json.loads(body)[0]["name"] # pyright: ignore[reportAny]
         except: return None
         ver = latest[1:]
         return Version.parse(ver)
@@ -79,7 +79,7 @@ def download_version(ver: Version) -> Version | None:
     req = Request(url, headers={"User-Agent": "pim-bootstrapper"})
     print(url)
     try:
-        resp: HTTPResponse = urlopen(req, timeout=TIMEOUT)
+        resp: HTTPResponse = urlopen(req, timeout=TIMEOUT) # pyright: ignore[reportAny]
         if resp.status != 200: return None
         b = resp.read()
         extract(b, PIM_PATH)
