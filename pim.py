@@ -1,4 +1,4 @@
 import sys
-from pim import main
+from lib import main
 
 sys.exit(main(sys.argv[1:]))
