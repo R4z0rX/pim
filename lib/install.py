@@ -4,7 +4,7 @@ import os
 import tempfile
 import shutil
 import zipfile
-from . import download_to_temp
+from .download import download_to_temp
 from .find import find_pkg_in_repos
 from .parse import parse_info_text
 from .config.path.command import cfg_add_command_path
