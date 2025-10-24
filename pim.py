@@ -1,4 +1,4 @@
 import sys
-from lib import main
+from lib.main import main
 
 sys.exit(main(sys.argv[1:]))
