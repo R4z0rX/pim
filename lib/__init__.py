@@ -26,6 +26,7 @@ import time
 import json
 
 from .config.backup import make_backup
+from .util.url import url_join
 
 __version__ = "1.0.4"
 
@@ -53,11 +54,6 @@ FETCH_TIMEOUT = 10 # seconds
 # ---------------------------
 
 
-
-def url_join(base: str, name: str) -> str:
-    if not base.endswith("/"):
-        base += "/"
-    return base + name
 
 
 def find_package_in_repos(pkg_name: str, repos: list[str]) -> tuple[str,str,str] | None:
