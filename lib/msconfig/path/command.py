@@ -1,7 +1,7 @@
 # pyright: reportUnusedCallResult=false
 import os
 from lib import PKG_PATH, MAKE_BKP, config_path
-from lib.config.backup import make_backup
+from lib.msconfig.backup import make_backup
 
 def cfg_add_command_path(pkg_name: str, subdir: str = "commands") -> tuple[bool, str]:
     """

@@ -7,7 +7,7 @@ import zipfile
 from .download import download_to_temp
 from .find import find_pkg_in_repos
 from .parse import parse_info_text
-from .config.path.command import cfg_add_command_path
+from .msconfig.path.command import cfg_add_command_path
 from .util.prompt import prompt_yes_no
 
 def install_package(

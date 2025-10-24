@@ -1,6 +1,6 @@
 import os
 import shutil
-from .config.path.command import cfg_remove_command_path
+from .msconfig.path.command import cfg_remove_command_path
 
 def uninstall_package(pkg_name: str, target: str):
     path = os.path.join(target, pkg_name)
